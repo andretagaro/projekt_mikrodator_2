@@ -37,10 +37,11 @@ Första talet anger styrka, andra talet anger riktning.
 10 anger centralt på joysticken.
 
 1010, ge ingen kraft till motorerna
-2020, ge full kraft åt båda motorena framåt
-0000, ge full kraft åt båda motorena bakåt
-1505, ge medelkraft åt motorena men mer kraft åt höger motor
-1505, ge medelkraft åt motorena men mer kraft åt höger motor
+2010, ge full kraft åt båda motorerna framåt
+2020, ge full kraft åt endast ena motorn
+0010, ge full kraft åt båda motorerna bakåt
+1505, ge medelkraft åt motorerna men mer kraft åt höger motor
+
 
 */
 /************************************************************************/
