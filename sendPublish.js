@@ -1,6 +1,6 @@
 const serialport = require('serialport')
 const serial_options={ baudRate: 9600 }; //Ange ditt systems baudrate
-const serial_port="COM7"; //Ange dutt systems COM-port
+const serial_port="COM7"; //Ange ditt systems COM-port
 const myPort = new serialport(serial_port, serial_options);
 
 const mqtt= require('mqtt');
@@ -11,7 +11,7 @@ const client = mqtt.connect("mqtt://130.239.163.210", {clientId:"", username:"mi
 
 let i = 1510;
 
-/*Funktionsdeklarion*/ 
+/*Funktionsdeklaration*/ 
 
 const sendThis = function(){
     client.on('message', (topic, message) =>
@@ -23,18 +23,18 @@ const sendThis = function(){
     })
 
     /*Öka värdet på i, återställ till 1510 vid 2010*/
-    /*Detta är var bara ett test för att verifiera att det funkade*/
+    /*Detta var bara ett test för att verifiera att det funkade*/
 
     i += 100;
     if(i === 2010) i = 1510;
     
-    /* `${}`, gör om varibeln den omsluter till en sträng, vilket publishfunktionen vill ha*/
+    /* `${}`, gör om varibeln den omsluter till en sträng, vilket publishfunktionen vill ha som argument*/
     client.publish('grupp4/direction/remote_1', `${i}`);
 
 }
 
 /*Program start*/
-/*Från rad börjar programmet sin "main-loop"*/
+/*Från denna rad börjar programmet sin "main-loop"*/
 
 /*Börja prenumerera på den data du vill ha*/ 
 client.on('connect', () =>
@@ -45,6 +45,6 @@ client.on('connect', () =>
     ... */
 })
 
-/*Ange hur ofta vi ska hoppa in i funktionen som skickar
-och tar emot data via MQTT, i detta fall 3000ms*/
+/*Ange hur ofta vi ska hoppa till den funktion som skickar
+och tar emot data via MQTT, i detta fall var 3000:de millisekund*/
 const updateTimer1 = setInterval(sendThis, 3000);
