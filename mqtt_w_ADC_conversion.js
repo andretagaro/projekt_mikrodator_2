@@ -24,6 +24,7 @@ function showPortOpen() {
 
 // read data from UART
 function readSerialData(data) {
+
     console.log("Data from serial port: ", data); //print in console
 
     let range_cm = 0.0;
@@ -39,7 +40,11 @@ function readSerialData(data) {
     else {
         range_cm = (-0.3772*data + 137.43);
     }
-    client.publish("grupp4/range", "ADC: " + data + "  Range: " + range_cm.toFixed(1) + " cm", options_P); //publish data [TOPIC, MESSAGE, OPTIONS]
+    client.publish("grupp4/range/ADC", data, options_P); //publish data [TOPIC, MESSAGE, OPTIONS]
+    client.publish("grupp4/range/cm", range_cm.toFixed(0), options_P);
+    client.publish("grupp4/range/single_ASCII", String.fromCodePoint(range_cm.toFixed(0)), options_P); 
+        // omvandlar till ett enda tecken vilket är enklare att läsa för AVR ^
+    
 }
 
 function showPortClose() {
@@ -74,14 +79,17 @@ client.on("connect", function()
 
 
 //--- SUBSCRIBE ---
+//let topics={"grupp4/range/cm":1,"grupp4/range/ADC":1,"grupp4/direction/remote":1};
+//client.subscribe(topics);
 
-let topic_s ="grupp4/range";        //topic(s)
+
+let topic_s ="grupp4/range/single_ASCII";        //topic(s)
 client.subscribe(topic_s,{qos:1});  //subscribe to this topic
 
 client.on('message', function(topic_s, message, packet){
     console.log("message is "+ message);
     //console.log("topic is "+ topic_s);
-    myPort.write('A');  // <-- char is sent to UART
+    myPort.write(message);  // <-- char is sent to UART
 });
 
 
