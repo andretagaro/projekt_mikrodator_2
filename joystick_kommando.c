@@ -10,7 +10,7 @@ volatile uint16_t y_sig = 0;
 
 //Command to use printf to write to USART
 static uint8_t LCD_printChar(char ch, FILE *stream);
-static FILE lcd_stream = FDEV_SETUP_STREAM(LCD_printChar, NULL, _FDEV_SETUP_WRITE);
+static FILE usart_stream = FDEV_SETUP_STREAM(LCD_printChar, NULL, _FDEV_SETUP_WRITE);
 
 static uint8_t LCD_printChar(char ch, FILE *stream)
 {
@@ -23,7 +23,7 @@ static uint8_t LCD_printChar(char ch, FILE *stream)
 
   // Divide ADC value by 50 to get a double-digit value
   x_sig = adc_read(6) / 50;
-	y_sig = adc_read(5) / 50;
+  y_sig = adc_read(5) / 50;
 
 
 
@@ -70,25 +70,9 @@ uint16_t adc_read(uint8_t val)
 }
 
 
-// Place a zero infront of a single digit values and send four digits
+// Transmit 4 digit values over USART using printf function 
 void uart_print_send(void)
 {
-
-	if (x_sig < 10 && y_sig < 10)	{
-
-		stdout = &lcd_stream;
-		printf("D0%d0%d\n", y_sig,x_sig);
-	}
-	else if (x_sig < 10 && y_sig >= 10) {
-		stdout = &lcd_stream;
-		printf("D%d0%d\n", y_sig,x_sig);
-	}
-	else if (x_sig >= 10 && y_sig < 10) {
-		stdout = &lcd_stream;
-		printf("D0%d%d\n", y_sig,x_sig);
-	}
-	else {
-		stdout = &lcd_stream;
-		printf("D%d%d\n", y_sig,x_sig);
-	}
+	stdout = &usart_stream;
+	printf("D%.2d%.2d\n", y_sig,x_sig);
 }
