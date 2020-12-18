@@ -18,6 +18,14 @@ https://github.com/olikraus/u8glib/wiki/avr
 #include "u8g.h"
 #include <stdlib.h>
 
+volatile uint8_t received = 0;
+volatile uint8_t received0 = 0;
+volatile uint8_t received1 = 0;
+
+volatile uint8_t i = 0;
+volatile uint8_t data_ascii = 0;
+volatile uint8_t test_data[8] = {0};
+
 void draw(void) 
 {
 	char rx_0[10];
