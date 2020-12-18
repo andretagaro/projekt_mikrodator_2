@@ -46,7 +46,7 @@ function readSerialData(data) {     //denna körs då data tas emot i serieporte
         range_cm = 99;
     }
     client.publish("grupp4/range/ADC", data, options_P); //publish data [TOPIC, MESSAGE, OPTIONS]
-    client.publish("grupp4/range/cm", 'A' + range_cm.toFixed(0), options_P);
+    client.publish("grupp4/range/cm", 'A' + range_cm.toFixed(0), options_P);    //publicera data i cm, med 0 decimaler
     client.publish("grupp4/range/single_ASCII", String.fromCodePoint(range_cm.toFixed(0)), options_P); 
         // omvandlar till ett enda tecken vilket är enklare att läsa för AVR ^
 }
