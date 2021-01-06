@@ -18,9 +18,10 @@ https://github.com/olikraus/u8glib/wiki/avr
 #include "u8g.h"
 #include <stdlib.h>
 
-volatile uint8_t received = 0;
-volatile uint8_t received0 = 0;
-volatile uint8_t received1 = 0;
+
+
+uint8_t a_data[8] = {0};
+volatile uint8_t b_data[8] = {0};
 
 volatile uint8_t i = 0;
 volatile uint8_t data_ascii = 0;
@@ -33,9 +34,9 @@ void draw(void)
 	char rx_2[10]; 
 
 	//snprintf convert and stores a variable in a buffer   
-	snprintf(rx_0, 10, "%d", received);
-	snprintf(rx_1, 10, "%d", received0);
-	snprintf(rx_2, 10, "%d", received1);
+	snprintf(rx_0, 10, "%d", a_data[0]);  // First position of array contain a letter 
+	snprintf(rx_1, 10, "%d", (a_data[1] - 48));  // Get none ascii number 
+	snprintf(rx_2, 10, "%d", (a_data[2] - 48));
 	
 	
 	u8g_SetFont(&u8g, u8g_font_10x20);	// Set screen font (letter size)
@@ -43,6 +44,7 @@ void draw(void)
 	u8g_DrawStr(&u8g, 50, 40, rx_0);
 	u8g_DrawStr(&u8g, 60, 40, rx_1);
 	u8g_DrawStr(&u8g, 70, 40, rx_2);
+	
 }
 
 
@@ -84,10 +86,16 @@ ISR(USART0_RX_vect)
 	if (data_ascii != 10) {
 		test_data[i] = data_ascii;
 		i++;
-	}else if (data_ascii == 10) {			//when end of string is reached
-		received = (test_data[0] - 48);
-		received0 = (test_data[1] - 48);
-		received1 = (test_data[2] - 48);
-		 i = 0;
+	}
+	else if (data_ascii == 10) {			//when end of string is reached
+		if (test_data[0] == 65) {		// Check for letter A = 65 (in ascii)
+			memcpy(a_data, test_data, 8); 	// Copy received data to a new array
+	
+		} 
+		else if (test_data[0] == 66)	{	// Check for letter B = 66 (in ascii)
+			memcpy(b_data, test_data, 8); // Copy received data to new array
+		
+		}
+		i = 0;
 	}
 }
