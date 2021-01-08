@@ -138,7 +138,7 @@ mqtt_client.on("connect", function() {
 
     }
 
-    // If no new data is received after before count_var > 20
+     // If no new data is received after 20s count_var > 20
     if ((topic_in == 'grupp4/range/car_2') || (count_var > 20)) {
       console.log("topic is: " + topic_in);
       console.log("Message is: " + message);
@@ -153,7 +153,7 @@ mqtt_client.on("connect", function() {
       count_var = 1;
     }
 
-    // If no new data is received after 10s count_var > 20
+    // If no new data is received after 20s count_var > 20
     if ((topic_in == 'grupp4/range/car_1') || (count_var2 > 20)) {
       console.log("topic is: " + topic_in);
       console.log("Message is: " + message);
