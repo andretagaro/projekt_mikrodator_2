@@ -24,7 +24,6 @@
 #define CLEARBIT(ADDR, BIT) (ADDR &= ~(1<<BIT))
 
 // Function declaration
-void uart_transmit(uint8_t data);
 uint8_t uart_receive(void);
 void uart_print_send(char ch);
 
@@ -125,11 +124,12 @@ int main(void)
 			reset_prog_oled();
 			}
 		}
-		draw_oled();
+		draw_oled();		// Function to show what cars are online or offline
 		x_sig = adc_read(6);
 		y_sig = adc_read(5);
 		
-		if(x_sig < 8) {
+		// Select with the joystick what car to interact with
+		if(x_sig < 8) {		
 			move_left = 1; 
 		}
 		if(x_sig > 12) {
@@ -143,21 +143,11 @@ int main(void)
     }
 }
 
-void uart_transmit(uint8_t data)
-{
-
-	/* Wait for empty transmission buffer*/
-	while (( UCSR0A & (1<<UDRE0)) == 0)
-	;
-	/* Put data into buffer and send the data.*/
-	UDR0 = data;
-	
-}
 
 void uart_print_send(char c)
 {
 	stdout = &aurt_stream;
-	printf("%c%.2d%.2d\n", c, x_sig, y_sig);
+	printf("%c%.2d%.2d\n", c, y_sig, x_sig);
 	
 }
 
@@ -169,38 +159,40 @@ ISR(USART0_RX_vect)
 	if (data_ascii != 10) {
 		test_data[i] = data_ascii;
 		i++;						
-		}else if (data_ascii == 10) {
+	}
+	else if (data_ascii == 10) {
 							
-			if (test_data[0] == 65) {
+		if (test_data[0] == 65) {
 			
-				memcpy(a_data, test_data, 4); // Copy received data to new array
-				memset(test_data, 48 , 4);
+			memcpy(a_data, test_data, 4); // Copy received data to new array
+			memset(test_data, 0 , 4);	  // Reset test_data array to prepare for new data
 	
-			} 
-			else if (test_data[0] == 66)	{
+		} 
+		else if (test_data[0] == 66)	{
 				
-				memcpy(b_data, test_data, 4); // Copy received data to new array
+			memcpy(b_data, test_data, 4); // Copy received data to new array
+			memset(test_data, 0 , 4);	  // Reset test_data array to prepare for new data
 		
 			
-			}
+		}
 			
-			else if (test_data[0] == 67) {
-				a_data[0] = test_data[0];
-			}
+		else if (test_data[0] == 67) {
+			a_data[0] = test_data[0];
+		}
 			
-			else if (test_data[0] == 68) {
-				b_data[0] = test_data[0] ;
-			}
+		else if (test_data[0] == 68) {
+			b_data[0] = test_data[0] ;
+		}
 			
 			
-			i = 0; // Set i = 0 to prepare for new data to be stored in test_data array.
+		i = 0; // Set i = 0 to prepare for new data to be stored in test_data array.
 	}
 }
 
 void reset_prog(void)
 {
-	u8g_SetFont(&u8g, u8g_font_8x13);	// Set screen font (letter size)
-	u8g_DrawStr(&u8g, 0, 40, "Restart init...");
+	u8g_SetFont(&u8g, u8g_font_6x10);	// Set screen font (letter size)
+	u8g_DrawStr(&u8g, 0, 40, "Watchdog-Reset init...");
 	
 	
 }
@@ -259,8 +251,8 @@ void tutorial_message(void)
 	u8g_SetFont(&u8g, u8g_font_8x13);	// Set screen font (letter size)
 	u8g_DrawStr(&u8g, 0, 12, "Move joystick");
 	u8g_SetFont(&u8g, u8g_font_7x13);
-	u8g_DrawStr(&u8g, 0, 35, "Right -->  CarA");
-	u8g_DrawStr(&u8g, 0, 50, "Left  -->	 CarB");
+	u8g_DrawStr(&u8g, 0, 35, "To right for CarA");
+	u8g_DrawStr(&u8g, 0, 50, "To left  for CarB");
 	
 }
 
@@ -285,29 +277,38 @@ void get_range(void)
 	char rx_2[10];
 	char rx_3[10];
 	
+	snprintf(s_str_x, 9, "%d", x_sig);	// Joystick data
+	snprintf(s_str_y, 9, "%d", y_sig);
+	
 	snprintf(rx_0, 10, "%c", a_data[0]); // Convert ASCII digit to char
 	snprintf(rx_1, 10, "%d", (a_data[1] - 48)); // Convert int to string
 	snprintf(rx_2, 10, "%d", (a_data[2] - 48));
 	snprintf(rx_3, 10, "%d", (a_data[3] - 48));
 	
-	/*if(a_data[1] != 0) {
-		snprintf(rx_1, 10, "%d", (a_data[1] - 48)); // Convert int to string
-	}*/
-	
-	snprintf(s_str_x, 9, "%d", x_sig); //Convert an int to a string
-	snprintf(s_str_y, 9, "%d", y_sig);
-	
-	u8g_SetFont(&u8g, u8g_font_8x13);	// Set screen font (letter size)
+	u8g_SetFont(&u8g, u8g_font_8x13);	
 	u8g_DrawStr(&u8g, 0, 12, "Car A is ready");
-	u8g_DrawStr(&u8g, 0, 30, "Range:");		//Set position (where to print) and print to OLED.
+	u8g_DrawStr(&u8g, 0, 30, "Range:");		
 	u8g_DrawStr(&u8g, 50, 30, rx_1);
-	u8g_DrawStr(&u8g, 60, 30, rx_2);
-	u8g_DrawStr(&u8g, 70, 30, rx_3);
+	
+	/*
+	* When no data is received the default value will be -48
+	* THIS IS BECAUSE ((a_data[2] - 48) == -48) WHEN NO DATA IS ON POSITION 2 
+	* When statement evaluates to true noting will be drawn to OLED
+	* This is a way to clear bit position of its previous old data 
+	* if no new data has arrived on the array position
+	*/
+	
+	if((a_data[2] - 48) != -48) {	
+		u8g_DrawStr(&u8g, 60, 30, rx_2);
+	}
+	if ((a_data[3] - 48) != -48) {
+		u8g_DrawStr(&u8g, 70, 30, rx_3);
+	}
 	u8g_DrawStr(&u8g, 80, 30, "cm");
 	
-	u8g_DrawStr(&u8g, 0, 45, "move:A");
-	u8g_DrawStr(&u8g, 50, 45, s_str_y);
-	u8g_DrawStr(&u8g, 70, 45, s_str_x);
+	u8g_DrawStr(&u8g, 0, 45, "move: A");
+	u8g_DrawStr(&u8g, 60, 45, s_str_y);
+	u8g_DrawStr(&u8g, 80, 45, s_str_x);
 	u8g_SetFont(&u8g, u8g_font_6x10);
 	u8g_DrawStr(&u8g, 0, 62, "Press down to return");
 }
@@ -346,7 +347,13 @@ void get_range_b(void)
 	u8g_DrawStr(&u8g, 0, 12, "Car B is ready");		
 	u8g_DrawStr(&u8g, 0, 30, "Range:");		//Set position (where to print) and print to OLED.
 	u8g_DrawStr(&u8g, 50, 30, rx_1);
-	u8g_DrawStr(&u8g, 60, 30, rx_2);
+	
+	if((b_data[2] - 48) != -48) {
+		u8g_DrawStr(&u8g, 60, 30, rx_2);
+	}
+	if ((b_data[3] - 48) != -48) {
+		u8g_DrawStr(&u8g, 70, 30, rx_3);
+	}
 	u8g_DrawStr(&u8g, 80, 30, "cm");
 	
 	u8g_DrawStr(&u8g, 0, 45, "move:B");
@@ -377,25 +384,31 @@ uint8_t choice_carA(uint8_t move, uint8_t set)
 		x_sig = adc_read(6);
 		y_sig = adc_read(5);
 		
+		/* If someone is trying to connect to a car that is offline 
+		* send offline message to screen.
+		*/
 		if (a_data[0] != 65) {
 			no_connection_oled();
-		} else 	{
-			range_to_oled();
+		}
+		else 	{
+			range_to_oled();   //Print to the screen
 		
-			if((x_sig != 10) || (y_sig != 10)) 	{
+			if((x_sig != 10) || (y_sig != 10)) {
 				uart_print_send('A');
 				set = 1;
-				}else {
-					if (set == 1) {
-						uart_print_send('A');
-						set = 0;
-					}
-				
-				}
-			
 			}
-			if((PINA & (1 << PINA7)) == 0) {
-				move = 0;
+			else {
+				if (set == 1) {
+					uart_print_send('A');
+					set = 0;
+				}
+				
+			}
+			
+		}
+		// Get out of the loop if joystick is pressed down
+		if((PINA & (1 << PINA7)) == 0) {
+			move = 0; 
 		}
 	}
 	return move;
@@ -413,19 +426,22 @@ uint8_t choice_carB(uint8_t move_b, uint8_t set_b)
 		
 		if (b_data[0] != 66) {
 			no_connection_oled();
-			} else 	{			
-				range_b_oled();
+		} 
+		else {
+			range_b_oled(); // Print to the screen
+
+			if((x_sig != 10) || (y_sig != 10)) {
 				
-			
-			if((x_sig != 10) || (y_sig != 10)) 	{
-				uart_print_send('B');
-				set_b = 1;
-				}else {
+			uart_print_send('B');
+			set_b = 1;
+				
+			}
+			else {
 				if (set_b == 1) {
 					uart_print_send('B');
 					set_b = 0;
 				}
-				
+
 			}
 			
 		}
@@ -438,7 +454,7 @@ uint8_t choice_carB(uint8_t move_b, uint8_t set_b)
 
 void no_connection(void) 
 {
-	u8g_SetFont(&u8g, u8g_font_8x13);	// Set screen font (letter size)
+	u8g_SetFont(&u8g, u8g_font_8x13);	
 	u8g_DrawStr(&u8g, 30, 15, "This car");
 	u8g_DrawStr(&u8g, 10, 30, "is not online");
 	u8g_SetFont(&u8g, u8g_font_6x10);
@@ -455,7 +471,5 @@ void no_connection_oled(void)
 	} while ( u8g_NextPage(&u8g) );
 	u8g_Delay(100);
 }
-
-
 
 
